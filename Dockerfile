@@ -11,18 +11,22 @@ RUN apt update && apt install -y locales
 #ENV LANG=en_US.UTF-8
 #ENV LC_ALL=en_US.UTF-8
 
-# 2. Add ROS 2 Repository (Replaces the broken manual .deb download)
-RUN apt update && apt install -y lsb-release
-# Add ROS 2 GPG key
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
-# Add the ROS 2 repository source list (for Humble on Jammy)
-RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
+# 2. Add System Dependencies
+# Dependencies must be installed in the image since they are not mounted at runtime
+RUN apt update && apt upgrade -y 
 
-# 2.5 Add System Dependencies
+# 2.5 Install Build and Core Libraries
 RUN apt install -y libpcl-dev \
                    libeigen3-dev \
                    # Add other common tools needed for development/building packages
-                   g++ cmake
+                   g++ cmake git \
+                   python3-rosdep python3-colcon-common-extensions \
+                   # ROS dependecies installed as system package
+                   ros-humble-pcl-conversions \
+                   ros-humble-pcl-ros \
+                   ros-dev-tools \
+                   # Other utilities
+                   curl software-properties-common
 
 # 3. Install ROS 2 Humble
 RUN apt update
