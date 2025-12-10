@@ -1,5 +1,5 @@
-# Start with the base image
-FROM ubuntu:jammy
+# Start with a pre-built ROS2 base image
+FROM amd64/ros:humble-ros-base-jammy
 
 # 1. Fix ENV formatting and locale setup
 ENV DEBIAN_FRONTEND=noninteractive
@@ -69,4 +69,4 @@ RUN ["/bin/bash", "-c", ". /opt/ros/humble/setup.bash && colcon build --symlink-
 RUN echo ". /root/ros2_ws/install/setup.bash" >> /root/.bashrc
 
 # Set the default command to bash
-CMD ["/bin/bash"]
+CMD ["/bin/bash"] 
