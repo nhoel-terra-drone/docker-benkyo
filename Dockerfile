@@ -32,41 +32,13 @@ RUN apt install -y libpcl-dev \
 WORKDIR /root/ros2_ws
 RUN mkdir -p src
 
-# Clone External Dependencies (livox_ros_driver2)
-# Change the working directory to the 'src' folder
-WORKDIR /root/ros2_ws/src
-# Clone the specific branch using git clone
-RUN git clone https://github.com/Ericsii/livox_ros_driver2.git
+# 4. Handle ROS Dependencies
+RUN rosdep init || true
+RUN rosdep update
 
-# Build the Workspace
-# Change back to the workspace root for colcon build
-WORKDIR /root/ros2_ws
-# Source the ROS 2 setup file and build the workspace
-RUN ["/bin/bash", "-c", ". /opt/ros/humble/setup.bash && colcon build --symlink-install"]
-
-# Set Environment for Subsequent Runs
-# Add the workspace setup to the bash profile so it's sourced automatically
-RUN echo ". /root/ros2_ws/install/setup.bash" >> /root/.bashrc
-
-# 5. Install FAST_LIO Git Repo
-
-# Install ROS 2 PCL dependencies explicitly
-RUN apt update && apt install -y ros-humble-pcl-conversions ros-humble-pcl-ros
-
-# Set up the ROS 2 Workspace structure
-WORKDIR /root/ros2_ws
-RUN mkdir -p src
-WORKDIR /root/ros2_ws/src
-RUN git clone https://github.com/Ericsii/FAST_LIO.git --recursive
-
-# Set up ROS Dependencies
-WORKDIR /root/ros2_ws
-RUN rosdep init && rosdep update
-RUN ["/bin/bash", "-c", "export ROS_DISTRO=humble && rosdep install --from-paths src --ignore-src -y"]
-#RUN ["/bin/bash", "-c", ". ./install.setup.bash && colcon build --symlink-install"]
-RUN ["/bin/bash", "-c", ". /opt/ros/humble/setup.bash && colcon build --symlink-install"]
-
-RUN echo ". /root/ros2_ws/install/setup.bash" >> /root/.bashrc
+# 5. Set Environment for Subsequent Runs
+# The ROS 2 setup file is already in the ros-base image
+RUN echo ". /opt/ros/humble/setup.bash" >> /root/.bashrc
 
 # Set the default command to bash
 CMD ["/bin/bash"] 
