@@ -1,12 +1,15 @@
 # Start with a pre-built ROS2 base image
 FROM amd64/ros:humble-ros-base-jammy
 
-# 1. Fix ENV formatting and locale setup
+# 1. Locale setup (necessary for ROS/Apt to work correctly)
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt update && apt install -y locales curl software-properties-common
-RUN locale-gen en_US en_US.UTF-8
-ENV LANG=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
+#RUN apt update && apt install -y locales curl software-properties-common
+RUN apt update && apt install -y locales
+
+# Note: ros-base image already has basic local setup
+#RUN locale-gen en_US en_US.UTF-8
+#ENV LANG=en_US.UTF-8
+#ENV LC_ALL=en_US.UTF-8
 
 # 2. Add ROS 2 Repository (Replaces the broken manual .deb download)
 RUN apt update && apt install -y lsb-release
