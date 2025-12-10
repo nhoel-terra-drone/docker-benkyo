@@ -41,4 +41,4 @@ RUN rosdep update
 RUN echo ". /opt/ros/humble/setup.bash" >> /root/.bashrc
 
 # Set the default command to bash
-CMD ["/bin/bash"] 
+CMD ["/bin/bash"]
