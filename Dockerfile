@@ -28,14 +28,7 @@ RUN apt install -y libpcl-dev \
                    # Other utilities
                    curl software-properties-common
 
-# 3. Install ROS 2 Humble
-RUN apt update
-RUN apt upgrade -y
-RUN apt install -y ros-humble-desktop
-RUN apt install -y ros-dev-tools
-
-# 4. Install Livox ROS Driver 2 Git Repo
-# Set up the ROS 2 Workspace structure
+# 3. Setup ROS2 Workspace Structure (establish paths)
 WORKDIR /root/ros2_ws
 RUN mkdir -p src
 
