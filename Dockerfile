@@ -13,7 +13,7 @@ RUN apt update && apt install -y locales
 
 # 2. Add System Dependencies
 # Dependencies must be installed in the image since they are not mounted at runtime
-RUN apt update && apt upgrade -y 
+RUN apt update && apt upgrade -y --fix-missing
 
 # 2.5 Install Build and Core Libraries
 RUN apt install -y libpcl-dev \
@@ -27,6 +27,29 @@ RUN apt install -y libpcl-dev \
                    ros-dev-tools \
                    # Other utilities
                    curl software-properties-common
+
+# ----------------------------------------------------
+# FIX: Use Snapshot Repository for Specific Version
+# ----------------------------------------------------
+# Define the date of the snapshot (Adjust as needed)
+ARG SNAPSHOT_DATE=2025-08-15
+ARG ROS_DISTRO_NAME=humble
+
+# A. Temporarily add the snapshot repository to sources.list
+#RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://snapshots.ros.org/${ROS_DISTRO_NAME}/${SNAPSHOT_DATE}/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" > /etc/apt/sources.list.d/ros2-snapshot.list
+RUN echo "deb [arch=$(dpkg --print-architecture) trusted=yes] http://snapshots.ros.org/${ROS_DISTRO_NAME}/${SNAPSHOT_DATE}/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" > /etc/apt/sources.list.d/ros2-snapshot.list
+
+# B. Update apt to recognize the snapshot
+RUN apt update
+
+# C. Install the exact version from the snapshot
+RUN apt install -y ros-humble-rosbridge-suite=2.0.1-1jammy*
+
+# D. Remove the snapshot entry to prevent accidental installation of old packages later
+RUN rm /etc/apt/sources.list.d/ros2-snapshot.list
+
+# E. Run apt update to revert to only using the official repository
+RUN apt update
 
 # 3. Setup ROS2 Workspace Structure (establish paths)
 WORKDIR /root/ros2_ws
