@@ -29,35 +29,11 @@ RUN apt install -y --no-install-recommends \
                    # Other utilities
                    curl software-properties-common
 
-# ----------------------------------------------------
-# FIX: Use Snapshot Repository for Specific Version
-# ----------------------------------------------------
-# Define the date of the snapshot (Adjust as needed)
-# ARG SNAPSHOT_DATE=2025-04-25
-# ARG ROS_DISTRO_NAME=humble
-
-# # A. Temporarily add the snapshot repository to sources.list
-# #RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://snapshots.ros.org/${ROS_DISTRO_NAME}/${SNAPSHOT_DATE}/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" > /etc/apt/sources.list.d/ros2-snapshot.list
-# RUN echo "deb [arch=$(dpkg --print-architecture) trusted=yes] http://snapshots.ros.org/${ROS_DISTRO_NAME}/${SNAPSHOT_DATE}/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" > /etc/apt/sources.list.d/ros2-snapshot.list
-# 
-# # B. Update apt to recognize the snapshot
-# RUN apt update
-# 
-# # C. Install the exact version from the snapshot
-# RUN apt install -y ros-humble-rosbridge-suite=2.0.0-1jammy*
-# 
-# # D. Remove the snapshot entry to prevent accidental installation of old packages later
-# RUN rm /etc/apt/sources.list.d/ros2-snapshot.list
-# 
-# # E. Run apt update to revert to only using the official
-# RUN apt update
-
-#ARG SNAPSHOT_DATE=2025-04-25
 ARG SNAPSHOT_DATE=2024-12-20
 ARG ROS_DISTRO_NAME=humble
 ARG ROSBRIDGE_VERSION=2.0.0-1jammy*
 
-# A. Temporarily add the snapshot repository to sources.list
+# A. Add the ONLY valid ROS snapshot repo
 RUN echo "deb [arch=$(dpkg --print-architecture) trusted=yes] http://snapshots.ros.org/${ROS_DISTRO_NAME}/${SNAPSHOT_DATE}/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" > /etc/apt/sources.list.d/ros2-snapshot.list
 
 # B. Update apt to recognize the snapshot
@@ -70,18 +46,22 @@ RUN echo "Package: ros-humble-rosbridge-suite" > /etc/apt/preferences.d/ros2-sna
 RUN echo "Pin: version ${ROSBRIDGE_VERSION}" >> /etc/apt/preferences.d/ros2-snapshot-pin
 RUN echo "Pin-Priority: 1001" >> /etc/apt/preferences.d/ros2-snapshot-pin
 
-# D. Install the package. The pin ensures the requested version is chosen.
-# Using the specific version in the install command is still best practice.
-RUN apt install -y ros-humble-rosbridge-suite=${ROSBRIDGE_VERSION}
+# C. Install pinned versions explicitly
+RUN apt-get update && \
+    apt-get install -y \
+        ros-humble-rosbridge-server=${ROSBRIDGE_VERSION} \
+        ros-humble-rosbridge-suite=${ROSBRIDGE_VERSION} && \
+    apt-mark hold \
+        ros-humble-rosbridge-server \
+        ros-humble-rosbridge-suite && \
+    rm -rf /var/lib/apt/lists/*
 
-# E. Remove the pinning and the snapshot source
-RUN rm /etc/apt/preferences.d/ros2-snapshot-pin
-RUN rm /etc/apt/sources.list.d/ros2-snapshot.list
+# D. Remove snapshot + pinning to prevent accidental downgrades later
+RUN rm /etc/apt/sources.list.d/ros2-snapshot.list && \
+    rm /etc/apt/preferences.d/ros2-snapshot-pin && \
+    apt-get update
 
-# F. Run apt update to revert to only using the official repository indices
-RUN apt update
-
-# 3. Setup ROS2 Workspace Structure (establish paths)
+# 3. ROS workspace setup
 WORKDIR /root/ros2_ws
 RUN mkdir -p src
 

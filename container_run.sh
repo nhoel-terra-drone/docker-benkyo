@@ -1,4 +1,4 @@
-IMAGE_TAG="jammy-docker-2"
+IMAGE_TAG="jammy-docker"
 
 docker run -it --rm \
        --name ros2_dev_container \
